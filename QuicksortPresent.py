@@ -1,4 +1,4 @@
-def quick(l):
+def quick(l):   
     if l:
         pivot = l[0]
         left = [i for i in l[1:] if i < pivot]

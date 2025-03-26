@@ -12,7 +12,6 @@ def mergesort(arr, start, end):
         if i == end:
             print(']', end = ' ')
     print()
-    # print(arr[start : end + 1])
 def merge(arr, start, mid, end):
     leftpart = arr[start : mid + 1]
     rightpart = arr[mid + 1 : end + 1]
