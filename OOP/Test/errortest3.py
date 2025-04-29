@@ -1,0 +1,1 @@
+l=list(input().split('\n'))
