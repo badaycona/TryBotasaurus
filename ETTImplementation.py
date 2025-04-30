@@ -128,17 +128,13 @@ class ListElement:
 
         while True: 
             not_tail = False
-            print(current if type(current) == dict else current.index)
-            print(current.next_pointers)
             for i in reversed(range(current.height + 1)):
                 if current.next_pointers[i] is not None:
                     current = current.next_pointers[i] 
                     not_tail = True
-                    print('advanced')
                     break
             if not not_tail:
                 #IF can not find any next node, current node shall be the tail
-                print('This is tail')
                 return current
     #Using for supporting method insert_after()
     def get_max_height_backward(self) -> int:
@@ -228,7 +224,7 @@ class ListElement:
                 self.link_backwards_at_height(h, other_list_start)
             if self_foward_height >= h:
                 self.link_foward_at_height(h, other_list_end)
-        other_list_end.next_pointers[0] = self.next_pointers
+        other_list_end.next_pointers[0] = self.next_pointers[0]
         if self.next_pointers[0] is not None:
             self.next_pointers[0].previous_pointers[0] = other_list_end
         self.next_pointers[0] = other_list_start
@@ -257,7 +253,7 @@ class ListElement:
         current_highest_height = -1
         while current is not None:
             if current.height > current_highest_height:
-                for i in range(current_highest_height + 1, current.height + 1):
+                for h in range(current_highest_height + 1, current.height + 1):
                     current.previous_pointers[h] = None
                 current_highest_height = current.height
             current = current.next_pointers[current.height]
@@ -341,7 +337,6 @@ class EulerTourForest(DynamicForest):
         node_j_element  : ListElement = self.nodes[j].euler_tour_element
 
         # Before the process, make sure to store the former edge of i
-        # This look silly here but this lengthy condition help streamlining cut() method
         former_edge = None
         if not (node_i_element.next() is None and node_i_element.previous() is None):
             if node_i_element.next():
@@ -350,22 +345,27 @@ class EulerTourForest(DynamicForest):
                 former_edge = (i, node_i_element.head().index)
         
         # Need to make j the first nodes in its list to merge
-        self.make_root(j)
+        already_root = node_j_element.previous() is None
+        if not already_root:
+            self.make_root(j)
         # Example list: [1 2 3 2 1]
         # Make_root(2)
         # After make_root: [2 3 2 1 1] (1 repeat 2 times as it is the former head of this list, nothing wrong here)
 
         # Only when node j is not isolated this condition continues
         # If not, e.g [1] we only need it being the same, not [1 1]
-        if node_j_element.next() is not None and node_j_element.previous() is not None:
-            new_tail = ListElement(j)
-            node_j_element.insert_after(new_tail, new_tail) #Now the example become [2 3 2 1 1 2]
+        # [1] [2] => [1 2 1]
+        # [0 1 2 1 0] [3 4 3] link(2, 3) => [0 1 2 3 4 3 2 1 0]
+        last_of_j = node_j_element.tail()
+        if not already_root:
+            last_of_j = ListElement(j)
+            node_j_element.insert_after(last_of_j, last_of_j) #Now the example become [2 3 2 1 1 2]
 
         # E.g [6 7 6] link with the example above [2 3 2 1 1 2] at node 7 should be [6 7 2 3 2 1 1 2 7 6], so we need to add another 7 
         # E.g [8] link with also that very example, should be [8 2 3 2 1 1 2 8]
         
         new_tail_again = ListElement(i)
-        node_j_element.insert_after(new_tail_again, new_tail_again)
+        last_of_j.insert_after(new_tail_again, new_tail_again)
 
         # Merge together
         tail_j = node_j_element.tail()
@@ -373,7 +373,7 @@ class EulerTourForest(DynamicForest):
 
         #Update edges
         self.edges[(i, j)] = node_i_element
-        self.edges[(j, i)] = new_tail
+        self.edges[(j, i)] = last_of_j
 
         #Update neighbors
         self.nodes[i].neighbors.add(j)
@@ -409,18 +409,18 @@ class EulerTourForest(DynamicForest):
         if i not in self.nodes[j].neighbors:
             raise ValueError(f'{i} is not linked with {j} in the first place')
         
-        i_elem : ListElement = self.edges[(i, j)]
-        j_elem : ListElement = self.edges[(j, i)]
+        first_i : ListElement = self.edges[(i, j)]
+        next_j : ListElement = self.edges[(j, i)]
 
-        next_i : ListElement = j_elem.next() 
-        next_j : ListElement = i_elem.next() 
+        next_i : ListElement = next_j.next() 
+        first_j : ListElement = first_i.next() 
 
-        i_elem.split_after()
+        first_i.split_after()
         next_j.split_after()
 
         tail = next_i.tail()
         if next_i.next():
-            i_elem.insert_after(next_i.next(), tail)
+            first_i.insert_after(next_i.next(), tail)
         
         del next_i
 
@@ -429,7 +429,10 @@ class EulerTourForest(DynamicForest):
 
         del self.edges[(i, j)]
         del self.edges[(j, i)]
-
+        
+        # [0 1 2 3 4 3 2 1 0]
+        # cut(1, 2)
+        # [0 1] [2 3 4 3 2] [1 0]
     def print_forest(self):
         """For debug only"""
         self.drawn = set()
@@ -453,61 +456,44 @@ class EulerTourForest(DynamicForest):
 # Khởi tạo một Euler Tour Forest
 forest = EulerTourForest()
 
-# # Thêm các node vào forest
-# print("Thêm các node vào forest:")
-# node_1 = forest.add_node()  # Node 1
-# node_2 = forest.add_node()  # Node 2
-# node_3 = forest.add_node()  # Node 3
-# node_4 = forest.add_node()  # Node 4
-# node_5 = forest.add_node()  # Node 5
-# print(f"Đã thêm các node: {node_1}, {node_2}, {node_3}, {node_4}, {node_5}")
-# print()
+# Thêm các node vào forest
+print("Thêm các node vào forest:")
+node_0 = forest.add_node()  # Node 0
+node_1 = forest.add_node()  # Node 1
+node_2 = forest.add_node()  # Node 2
+node_3 = forest.add_node()  # Node 3
+node_4 = forest.add_node()  # Node 4
+print(f"Đã thêm các node: {node_0}, {node_1}, {node_2}, {node_3}, {node_4}")
+print()
 
-# # Liên kết các node
-# print("Liên kết các node:")
-# forest.link(node_1, node_2)  # Link 1-2
-# forest.link(node_2, node_3)  # Link 2-3
-# forest.link(node_4, node_5)  # Link 4-5
-# print("Cây sau khi liên kết:")
-# forest.print_forest()
-# print()
+# Liên kết các node
+print("Liên kết các node:")
+forest.link(node_0, node_1)  # Link 0-1
+forest.link(node_1, node_2)  # Link 1-2
+forest.link(node_3, node_4)  # Link 3-4
+print("Cây sau khi liên kết:")
+forest.print_forest()
+print()
 
-# # Liên kết hai cây
-# print("Liên kết hai cây:")
-# forest.link(node_3, node_4)  # Link 3-4
-# print("Cây sau khi liên kết hai cây:")
-# forest.print_forest()
-# print()
+# Liên kết hai cây
+print("Liên kết hai cây:")
+forest.link(node_2, node_3)  # Link 2-3
+print("Cây sau khi liên kết hai cây:")
+forest.print_forest()
+print()
 
-# # Cắt một cạnh
-# print("Cắt cạnh giữa 2 và 3:")
-# forest.cut(node_2, node_3)  # Cut 2-3
-# print("Cây sau khi cắt cạnh:")
-# forest.print_forest()
-# print()
+# Cắt một cạnh
+print("Cắt cạnh giữa 1 và 2:")
+forest.cut(node_1, node_2)  # Cut 1-2
+print("Cây sau khi cắt cạnh:")
+forest.print_forest()
+print()
+# [0 1 0] [2 3 4 3 2]
+# Cắt một cạnh khác
+print("Cắt cạnh giữa 4 và 5:")
+forest.cut(node_3, node_4)  # Cut 3-4
+print("Cây sau khi cắt cạnh:")
+forest.print_forest()
+print()
 
-# # Cắt một cạnh khác
-# print("Cắt cạnh giữa 4 và 5:")
-# forest.cut(node_4, node_5)  # Cut 4-5
-# print("Cây sau khi cắt cạnh:")
-# forest.print_forest()
-# print()
-
-a = forest.add_node()
-b = forest.add_node()
-
-print(a, b)
-print('check legit')
-print(forest.nodes[a].index)
-print(forest.nodes[a].euler_tour_element)
-print(forest.nodes[b].index)
-print(forest.nodes[b].euler_tour_element)
-print('end')
-# forest.link(a, b)
-
-e1 : ListElement = forest.nodes[a].euler_tour_element
-e2 : ListElement = forest.nodes[b].euler_tour_element
-print(e1.next_pointers)
-print(e2.next_pointers)
-e1.link_backwards_at_height(0, e2)
-print(e1.next_pointers)
+#[0 1 0] [2 3 2] [4]
