@@ -472,8 +472,6 @@ forest.link(node_0, node_1)  # Link 0-1
 forest.link(node_1, node_2)  # Link 1-2
 forest.link(node_3, node_4)  # Link 3-4
 print("Cây sau khi liên kết:")
-forest.print_forest()
-print()
 
 # Liên kết hai cây
 print("Liên kết hai cây:")
