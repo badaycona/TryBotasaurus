@@ -3,6 +3,8 @@ from typing import List
 from random import random
 
 
+# For cleaning folder
+
 class DynamicForest(ABC):
     """
     Abstract base class for dynamic forest algorithms.

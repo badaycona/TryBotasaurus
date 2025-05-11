@@ -57,7 +57,6 @@ class EulerTourForest(DynamicForest):
 
             O(log(n)) time complexity
             """
-
             current = self
             
             while True:
@@ -79,7 +78,6 @@ class EulerTourForest(DynamicForest):
             """
 
             current = self
-
             while True:
                 not_tail = False
                 if current.next[0] is not None:
@@ -181,6 +179,7 @@ class EulerTourForest(DynamicForest):
                     EulerTourForest.NodeInSkipList._link_end_to_next_of_this(self, end, h)
 
             next = self.next[0]
+            
             self.next[0] = start
             start.previous[0] = self
             end.next[0] = next
@@ -191,7 +190,6 @@ class EulerTourForest(DynamicForest):
             """
             Split this list into two parts, making this node tail of the first and next of this the head of seccond
             """
-
             next = self.next[0]
             if not next:
                 return
@@ -213,7 +211,13 @@ class EulerTourForest(DynamicForest):
                         current.previous[h] = None
                     current_highest_height = current.height
                 current = current.next[current.height]
-            
+        def print_dict(self):
+            head = self.head()
+            ans = []
+            while head:
+                ans.append(head.index)
+                head = head.next[0]
+            return ans
     class Node:
         def __init__(self, index : int, reference : Optional['EulerTourForest.NodeInSkipList']):
             
@@ -270,25 +274,46 @@ class EulerTourForest(DynamicForest):
         # [1 2 4 6 4 2 3 2 1] 1 is head and also tail, we are going to delete the first 1 so we need to make the node 1 point to another reference, in this case, the tail 1
         # [2 4 6 4 2 3 2 1] split before first i then insert after tail, and finally create new reference of i at the end
         # [2 4] [6 4 2 3 2 1] => [6 4 2 3 2 1 2 4 6]
+
+        
+        
         i = index
         node_i_ref = self.nodes[i].reference
 
         if node_i_ref.previous[0] is None:
             return
         
-        index_head = node_i_ref.head().index
+        #[6 7 6] make_root(7) => [7 6 7]
+        # Need to identify if between the head and this node has some thing, if not we need to behave differently
+        # [6 7 6] make_root(7) => [7 6 7]
+        index_head = node_i_ref.head().index 
         node_head = self.nodes[index_head]
+        
         next_of_head = node_head.reference.next[0]
-
+        tail_of_before = None
         ref_tail = node_i_ref.tail()
+        tail = node_i_ref.tail()
+        node_head.reference.split_after()
+        #If there is something between head and i
+        if next_of_head is not node_i_ref: 
+            tail_of_before = node_i_ref.previous[0]
+            tail_of_before.split_after()
+        
+        # [6 7 6] make_root(7) => [7 6 7], edge(6, 7) => seccond 6
+        # [1 2 4 6 4 2 3 2 1 7 1] make_root(2) => [2 4 6 4 2 3 2 1 7 1 2], edge(1, 2) => last 1
+        # [1 2 4 6 4 2 3 2 1 7 1] make_root(4) => [4 6 4 2 3 2 1 2 4], edge(1, 2) => seccond 1
+        self.edges[(index_head, next_of_head.index)] = tail
+        
         node_head.reference = ref_tail
 
-        tail_of_next_of_head = node_i_ref.previous[0]
-        tail_of_next_of_head.split_after()
+        current_tail = ref_tail
+        if tail_of_before:
+            ref_tail.insert(next_of_head, tail_of_before)
+            current_tail = tail_of_before
 
-        ref_tail.insert(next_of_head, tail_of_next_of_head)
         another_node_i = self.NodeInSkipList(i)
-        tail_of_next_of_head.insert(another_node_i, another_node_i)
+        current_tail.insert(another_node_i, another_node_i)
+
     def link(self, index1 : int, index2 : int) -> None:
         """
         Create a edge between two nodes
@@ -296,7 +321,6 @@ class EulerTourForest(DynamicForest):
         Reconstruct the skip list
         """
         i, j = index1, index2
-
         #If node i and node j are in the same tree, return right away
         if self.root(i) == self.root(j):
             return
@@ -311,9 +335,8 @@ class EulerTourForest(DynamicForest):
         former_edge = None
         if ref_i.next[0]:
             former_edge = (i, ref_i.next[0].index)
-        
-        self.make_root(j)
-
+        if ref_j.previous[0] is not None:
+            self.make_root(j)
         last_of_j = ref_j.tail()
 
         new_ref_i = self.NodeInSkipList(i)
@@ -330,7 +353,7 @@ class EulerTourForest(DynamicForest):
         node_j.neighbors.add(i)
 
         #Readjust edges
-        if former_edge:
+        if former_edge is not None:
             self.edges[former_edge] = new_ref_i
 
     def cut(self, index1 : int, index2 : int) -> None:
@@ -339,36 +362,61 @@ class EulerTourForest(DynamicForest):
 
         Create two new skip list
         """
+        #Need to check wether first i or first j apppearance is nearer to head (or to tail)
         i, j = index1, index2
+        # Usually, i -> then j -> i but if otherwise, j -> i then i-> j 
+
         #If node i and node j are not connected, return instantly
 
         if i not in self.nodes[j].neighbors:
             return 
         
-        # [6 7 6] cut(6, 7) => [6] [7]
-        # [6 7 2 3 2 1 2 7 6] cut(7, 2) => [6 7 6] [2 3 2 1 2]
-        # [6 7 2 3 2 1 2 7 6] cut(2, 3) => [6 7 2 7 6] 
+        # [7 6 7] cut(6, 7)
+        # first_i = 6, next_j = first 7, next_i = 6
+        # [7] [6] [7]
+
+        #identify two edges:
+        node_i = self.edges[(i, j)]
+        node_j = self.edges[(j, i)] 
+
+        another_j = node_i.next[0]
+        another_i = node_j.next[0]
         
-        first_i = self.edges[(i, j)]
-        first_j = first_i.next[0]
-        next_j = self.edges[(j, i)]
-        next_i = next_j.next[0]
-        tail = next_i.tail()
+        head = node_i.head()
+        tail = node_j.tail()
 
-        first_i.split_after()
-        next_j.split_after()
+        node_j.split_after()
+        node_i.split_after()
+        
+        # [7 2 9 6 9 2 7] cut(2, 9) or cut(9, 2) return the same until now
+        # => [7 2] [9 6 9] [2 7]
+        # cut(2, 9) => i = 2, j = 9, i come first, j come later
+        # cut(9, 2) => i = 9, j = 2, i come later, i come first
+        # [head .... node_i] [another_j ... node_j] [another_i ... tail] in cut(2, 9) scenerio
+        # [head .... node_j] [another_i ... node_i] [another_j ... tail] in cut(9, 2) scenerio
+        # for consistent, check if tail of the first skip list node_i or node_j
 
-        next_of_next_i = next_i.next[0]
-        next_i.split_after() 
-        del next_i
-
-        first_i.insert(next_of_next_i, tail)
-
+        if head.tail() is node_j:
+            # Check if there is something after another_j to merge
+            node_to_merge = another_j.next[0]
+            if node_to_merge:
+                another_j.split_after()
+                del another_j
+                #Merge first and last list except for the another_i that should be deleted
+                node_j.insert(node_to_merge, tail)
+        else:
+            node_to_merge = another_i.next[0]
+            if node_to_merge:
+                another_i.split_after()
+                del another_i
+                node_i.insert(node_to_merge, tail)
+        
         self.nodes[i].neighbors.remove(j)
         self.nodes[j].neighbors.remove(i)
 
         del self.edges[(i, j)]
         del self.edges[(j, i)]
+
     def print_forest(self):
         """For debug only"""
         self.drawn = set()
@@ -387,43 +435,26 @@ class EulerTourForest(DynamicForest):
 
                 print(f"[*] {''.join(['*' for _ in range(current_height)])}")
                 print()
+    def transfer(self, A : Optional[list]):
+        """
+        Transfer a list into the forest
+        A is a list of index
+        """
+        if A is None:
+            return
+        for i in range(len(A)):
+            self.next_index = A[i]
+            self.add()
+        for i in range(len(A) - 1):
+            self.link(A[i], A[i + 1])  
+def testcase():
+    # Khởi tạo một Euler Tour Forest
+    forest = EulerTourForest()
 
-                
-# Khởi tạo một Euler Tour Forest
-forest = EulerTourForest()
-
-# Thêm các node vào forest
-print("Thêm các node vào forest:")
-node_0 = forest.add()  # Node 0
-node_1 = forest.add()  # Node 1
-node_2 = forest.add()  # Node 2
-node_3 = forest.add()  # Node 3
-node_4 = forest.add()  # Node 4
-print(f"Đã thêm các node: {node_0}, {node_1}, {node_2}, {node_3}, {node_4}")
-print()
-
-print("Liên kết các node:")
-forest.link(node_0, node_1)  # Link 0-1
-forest.link(node_1, node_2)  # Link 1-2
-forest.link(node_3, node_4)  # Link 3-4
-print("Cây sau khi liên kết:")
-forest.print_forest()
-print()
-
-# Liên kết hai cây
-print("Liên kết hai cây:")
-forest.link(node_2, node_3)  # Link 2-3
-print("Cây sau khi liên kết hai cây:")
-forest.print_forest()
-print()
-
-# Cắt một cạnh
-print("Cắt cạnh giữa 1 và 2:")
-forest.cut(node_1, node_2)  # Cut 1-2
-print("Cây sau khi cắt cạnh:")
-forest.print_forest()
-print()
-
-# Cắt một cạnh khác
-print("Cắt cạnh giữa 3 và 4:")
-forest.cut(node_3, node_4)  # Cut 3-4
+    # Thêm các node vào forest
+    print("Thêm các node vào forest:")
+    forest.transfer([7,6])
+    forest.print_forest()
+    forest.cut(6, 7)
+    forest.print_forest()
+    print()
