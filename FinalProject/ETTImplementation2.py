@@ -401,6 +401,7 @@ class EulerTourForest(DynamicForest):
             node_to_merge = another_j.next[0]
             if node_to_merge:
                 another_j.split_after()
+                self.edges[j, node_to_merge.index] = node_j
                 del another_j
                 #Merge first and last list except for the another_i that should be deleted
                 node_j.insert(node_to_merge, tail)
@@ -408,6 +409,7 @@ class EulerTourForest(DynamicForest):
             node_to_merge = another_i.next[0]
             if node_to_merge:
                 another_i.split_after()
+                self.edges[i, node_to_merge.index] = node_i
                 del another_i
                 node_i.insert(node_to_merge, tail)
         
@@ -458,3 +460,6 @@ def testcase():
     forest.cut(6, 7)
     forest.print_forest()
     print()
+
+if __name__ == "__main__":
+    testcase()

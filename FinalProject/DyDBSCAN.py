@@ -61,7 +61,8 @@ class DynamicDBSCAN():
                     self.core_points.update(bucket)
                     self.non_core_points.difference_update(set(bucket))
     def _link_all_points(self):
-        for i in self.core_points:        
+        for i in self.core_points:   
+            print('-----------------------------------------')     
             self.link_core_point(i)
 
         for i in self.non_core_points:        
@@ -84,7 +85,7 @@ class DynamicDBSCAN():
             else:
                 # We will link point_index to the point with the largest index not more than its own
                 # In this way, the graph on the core points in the bucket will always be a path
-                pre, _next=None, None 
+                pre, _next=None, None
                 for i in bucket:
                     if i not in self.core_points:
                         candidates_to_check.add(i)
@@ -173,18 +174,12 @@ class DynamicDBSCAN():
         return self.forest.root(index) if self.forest.nodes[index].neighbors else -1
 if __name__=='__main__':
     
-    data_set = set()
-    while len(data_set) < 360:
-        point = tuple(np.random.randint(0, 10, 4))  # Dạng tuple để có thể đưa vào set
-        data_set.add(point)
-
-    data = np.array(list(data_set))  
+    data=np.array([np.random.randint(0, 10, (1, 4)) for _ in range(360)])
     minP=3
     t=2
-    eps=1.14
-    i = 0
-    print(len(np.unique(data, axis = 0)))
+    eps=1.5
 
+    
     dbscan=DynamicDBSCAN(minP, t, eps, data)
 
     dbscan.add_point(np.array([1, 2, 3, 4]))
@@ -196,4 +191,5 @@ if __name__=='__main__':
     print('Non-core points:')
     print(dbscan.non_core_points)
 
-    print('Ended')
+    
+    
