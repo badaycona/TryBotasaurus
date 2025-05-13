@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from random import random
 from typing import Optional
+import json
 class DynamicForest(ABC):
     @abstractmethod
     def __init__(self):
@@ -218,6 +219,35 @@ class EulerTourForest(DynamicForest):
                 ans.append(head.index)
                 head = head.next[0]
             return ans
+        def to_debug_json(self):
+            def ref(n): 
+                if n: 
+                    return n.index  # Trả về index thay vì cả object
+                return None
+            
+            nodes = []
+            edges = []
+            
+            # Tạo các node và edges cho đồ thị
+            node = self
+            while node:
+                # Thêm node vào danh sách nodes
+                nodes.append({"id": node.index, "label": f"Node {node.index}"})
+                
+                # Nếu node có next node, thêm edge
+                if node.next[0]:
+                    edges.append({"from": node.index, "to": node.next[0].index})
+                
+                # Tiến đến next node
+                node = node.next[0]
+            
+            # Trả về chuỗi JSON cho Debug Visualizer dưới dạng đồ thị
+            return json.dumps({
+                "kind": {"graph": True},
+                "nodes": nodes,
+                "edges": edges
+            })
+
     class Node:
         def __init__(self, index : int, reference : Optional['EulerTourForest.NodeInSkipList']):
             
