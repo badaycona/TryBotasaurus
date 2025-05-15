@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from random import random
 from typing import Optional
-import json
 class DynamicForest(ABC):
     @abstractmethod
     def __init__(self):
@@ -57,6 +56,7 @@ class EulerTourForest(DynamicForest):
             Return the head of this tree a.k.a the first node
 
             O(log(n)) time complexity
+            
             """
             current = self
             
@@ -167,6 +167,7 @@ class EulerTourForest(DynamicForest):
             link end to next of this node
 
             in order to do that, we need to know the height of the list link into and beforeward, afterward of this node
+            
             """
             max_height_other_list = start.max_height_afterward()
             max_height_before = self.max_height_beforeward()
@@ -219,35 +220,6 @@ class EulerTourForest(DynamicForest):
                 ans.append(head.index)
                 head = head.next[0]
             return ans
-        def to_debug_json(self):
-            def ref(n): 
-                if n: 
-                    return n.index  # Trả về index thay vì cả object
-                return None
-            
-            nodes = []
-            edges = []
-            
-            # Tạo các node và edges cho đồ thị
-            node = self
-            while node:
-                # Thêm node vào danh sách nodes
-                nodes.append({"id": node.index, "label": f"Node {node.index}"})
-                
-                # Nếu node có next node, thêm edge
-                if node.next[0]:
-                    edges.append({"from": node.index, "to": node.next[0].index})
-                
-                # Tiến đến next node
-                node = node.next[0]
-            
-            # Trả về chuỗi JSON cho Debug Visualizer dưới dạng đồ thị
-            return json.dumps({
-                "kind": {"graph": True},
-                "nodes": nodes,
-                "edges": edges
-            })
-
     class Node:
         def __init__(self, index : int, reference : Optional['EulerTourForest.NodeInSkipList']):
             
@@ -304,26 +276,23 @@ class EulerTourForest(DynamicForest):
         # [1 2 4 6 4 2 3 2 1] 1 is head and also tail, we are going to delete the first 1 so we need to make the node 1 point to another reference, in this case, the tail 1
         # [2 4 6 4 2 3 2 1] split before first i then insert after tail, and finally create new reference of i at the end
         # [2 4] [6 4 2 3 2 1] => [6 4 2 3 2 1 2 4 6]
-
-        
-        
+        # [1 2 4 6 4 2 3 2 1 7 1*] make_root(4)
         i = index
         node_i_ref = self.nodes[i].reference
 
-        if node_i_ref.previous[0] is None:
+        if node_i_ref.head() == node_i_ref:
             return
         
-        #[6 7 6] make_root(7) => [7 6 7]
+        #[6 7 1 7 2 7 6 4 6] make_root(7) => [7 1 7 2 7 6 4 6 7]
         # Need to identify if between the head and this node has some thing, if not we need to behave differently
         # [6 7 6] make_root(7) => [7 6 7]
-        index_head = node_i_ref.head().index 
-        node_head = self.nodes[index_head]
-        
-        next_of_head = node_head.reference.next[0]
+        head = node_i_ref.head()
+        index_head = head.index
+        next_of_head = head.next[0]
         tail_of_before = None
-        ref_tail = node_i_ref.tail()
+        new_ref_for_head = self.edges[(next_of_head.index, index_head)].next[0]
         tail = node_i_ref.tail()
-        node_head.reference.split_after()
+        head.split_after()
         #If there is something between head and i
         if next_of_head is not node_i_ref: 
             tail_of_before = node_i_ref.previous[0]
@@ -331,14 +300,14 @@ class EulerTourForest(DynamicForest):
         
         # [6 7 6] make_root(7) => [7 6 7], edge(6, 7) => seccond 6
         # [1 2 4 6 4 2 3 2 1 7 1] make_root(2) => [2 4 6 4 2 3 2 1 7 1 2], edge(1, 2) => last 1
-        # [1 2 4 6 4 2 3 2 1 7 1] make_root(4) => [4 6 4 2 3 2 1 2 4], edge(1, 2) => seccond 1
+        # [1 2 4 6 4 2 3 2 1 7 1] make_root(4) => [4 6 4 2 3 2 1 2 4], edge(1, 2), edge(2, 4) = last 2 => seccond 1
         self.edges[(index_head, next_of_head.index)] = tail
         
-        node_head.reference = ref_tail
+        self.nodes[index_head].reference = new_ref_for_head
 
-        current_tail = ref_tail
+        current_tail = tail
         if tail_of_before:
-            ref_tail.insert(next_of_head, tail_of_before)
+            tail.insert(next_of_head, tail_of_before)
             current_tail = tail_of_before
 
         another_node_i = self.NodeInSkipList(i)
@@ -360,8 +329,11 @@ class EulerTourForest(DynamicForest):
         ref_i = node_i.reference
         ref_j = node_j.reference
 
-        # E.g. [6 7* 6] link(7,2) with [2 3 2 1 2] become [6 7 2 3 2 1 2 7* 6], the edge(7, 6) initial value is 7 (* signed) but later seccond 7
+        # E.g. [6 7* 6] link(7,2) with [1 2 3 2 1] become [6 7 2 3 2 1 2 7* 6], the edge(7, 6) initial value is 7 (* signed) but later seccond 7
         # We need to keep track of this edge to tweak later
+        # [6 7* 6] link(7,2) with [1 2 3 2 1] 
+        # make_root() => [2 3 2 1 2* 7]
+        # [6 7 [2 3 2 1 2* 7] 6 ]
         former_edge = None
         if ref_i.next[0]:
             former_edge = (i, ref_i.next[0].index)
@@ -403,8 +375,11 @@ class EulerTourForest(DynamicForest):
         
         # [7 6 7] cut(6, 7)
         # first_i = 6, next_j = first 7, next_i = 6
-        # [7] [6] [7]
-
+        # [7] [6] 
+        # [7 2 9 6 9 2 7] cut(2, 9) or cut(9, 2) return the same until now
+        # [7 2] [9 6 9 2 7]
+        # [7 2] [9 6 9] [2] [7]
+        # [7 2 7] [9 6 9] mất [2]
         #identify two edges:
         node_i = self.edges[(i, j)]
         node_j = self.edges[(j, i)] 
@@ -485,11 +460,9 @@ def testcase():
 
     # Thêm các node vào forest
     print("Thêm các node vào forest:")
-    forest.transfer([7,6])
-    forest.print_forest()
-    forest.cut(6, 7)
+    forest.transfer([7,6,2,1])
+    forest.transfer([5,3,4])
     forest.print_forest()
     print()
-
 if __name__ == "__main__":
     testcase()

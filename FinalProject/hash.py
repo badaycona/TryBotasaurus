@@ -27,3 +27,4 @@ class LSHash(object):
     def apply(self, x: np.array):
         x = x + self.eta
         return self.round_hash.apply(x)
+
