@@ -3,6 +3,14 @@ from sklearn.linear_model import Lasso
 from sklearn.datasets import make_regression
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+MAX_ITERATE = 10000
+def soft_thresholding(rho, lam):
+    if rho < -lam:
+        return rho - lam
+    elif rho > lam:
+        return rho + lam
+    else:
+        return 0
 def main_model():
     np.random.seed(0)
 
@@ -14,6 +22,27 @@ def main_model():
     scaler = StandardScaler()
     x_train = scaler.fit_transform(x_train)
     x_test = scaler.transform(x_test)
+    n, p = x_train.shape
+    beta = np.random.rand(p)
+    lam = 1
+    tol = 1e-6
+    intercept = 0
+    for iterate in range(MAX_ITERATE):
+        beta_old = beta.copy()
+        intercept_old = intercept
+
+        intercept = np.mean(y_train - x_train @ beta)
+        for j in range(p):
+            y_pred = x_train @ beta + intercept
+            residual = y_train - y_pred + x_train[:,j] * beta[j]
+
+            rho = np.dot(residual,x_train[:, j])
+            beta[j] = soft_thresholding(rho / n, lam)
+        
+        if np.linalg.norm(beta - beta_old, ord = 1) < tol and abs(intercept - intercept_old) < tol:
+            break
+
+    print(f'By-hand algorithm intercept and coef: {beta}')
 
     model = Lasso(alpha = 1)
     model.fit(x_train, y_train)
@@ -22,9 +51,10 @@ def main_model():
 
     print(f' Lasso coefficients: {beta_hat}')
     print(f' Lasso intercept: {model.intercept_}')
-    print(f' Lasso score: {model.score(x_test, y_test)}')
+    # print(f' Lasso score: {model.score(x_test, y_test)}')
 
-    print(f'Checking kkt condition for each features')
+    # print(f'Checking kkt condition for each features')
+
     satisfied = check_kkt_conditions(x_train, y_train, beta_hat, 1)
     print(satisfied)
     return model, x_train, y_train
