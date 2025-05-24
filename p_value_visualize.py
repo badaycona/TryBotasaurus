@@ -12,10 +12,8 @@ def main(debug = False):
         p_values.append(p_value)
         if p_value <= alpha:
             smaller_than_alpha += 1
-    if debug:
-        print(f'Percentage of p-values smaller than {alpha}: {smaller_than_alpha / 1000 * 100:.2f}%')
-        plt.hist(p_values)
-        plt.show()
-    return 
+    print(f'Percentage of p-values smaller than {alpha}: {smaller_than_alpha / 1000 * 100:.2f}%')
+    plt.hist(p_values)
+    plt.show()
 if __name__ == '__main__':
     main()
