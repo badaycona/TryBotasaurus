@@ -3,14 +3,32 @@ from sklearn.linear_model import Lasso
 from sklearn.datasets import make_regression
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+import check_kkt_conditions
 MAX_ITERATE = 10000
-def soft_thresholding(rho, lam):
+def soft_thresholding(rho, lam, z):
     if rho < -lam:
-        return rho - lam
+        return (rho + lam) / z
     elif rho > lam:
-        return rho + lam
+        return (rho - lam) / z
     else:
         return 0
+def coordinate_descent_lasso(X, y, lam, num_iter = MAX_ITERATE):
+    n, p = X.shape
+    beta = np.random.rand(p)
+    residual = y - X @ beta
+    for _ in range(num_iter):
+        for j in range(p):
+            r_j = residual + X[:, j] * beta[j]
+
+            rho_j = 1/n * X[:, j].T @ r_j
+            z = 1/n * (X[:, j] ** 2).sum()
+
+            beta[j] = soft_thresholding(rho_j, lam, z) 
+
+            residual = r_j - X[:, j] * beta[j]
+    sigma = np.sum(np.mean(X, axis = 0) * beta)
+    intercept = np.mean(y) - sigma
+    return beta, intercept
 def main_model():
     np.random.seed(0)
 
@@ -18,31 +36,18 @@ def main_model():
 
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 0.2, random_state = 0)
 
-
+    
     scaler = StandardScaler()
     x_train = scaler.fit_transform(x_train)
     x_test = scaler.transform(x_test)
-    n, p = x_train.shape
-    beta = np.random.rand(p)
-    lam = 1
-    tol = 1e-6
-    intercept = 0
-    for iterate in range(MAX_ITERATE):
-        beta_old = beta.copy()
-        intercept_old = intercept
+    # x_train : n*p
+    # y_train : n*1
+    # beta : p * 1
+    coef, intercept = coordinate_descent_lasso(x_train, y_train, lam=1)
+    
 
-        intercept = np.mean(y_train - x_train @ beta)
-        for j in range(p):
-            y_pred = x_train @ beta + intercept
-            residual = y_train - y_pred + x_train[:,j] * beta[j]
-
-            rho = np.dot(residual,x_train[:, j])
-            beta[j] = soft_thresholding(rho / n, lam)
-        
-        if np.linalg.norm(beta - beta_old, ord = 1) < tol and abs(intercept - intercept_old) < tol:
-            break
-
-    print(f'By-hand algorithm intercept and coef: {beta}')
+    print(f'By-hand algorithm  coef: {coef}')
+    print(f'By-hand algorithm intercept {intercept}')
 
     model = Lasso(alpha = 1)
     model.fit(x_train, y_train)
@@ -55,35 +60,11 @@ def main_model():
 
     # print(f'Checking kkt condition for each features')
 
-    satisfied = check_kkt_conditions(x_train, y_train, beta_hat, 1)
+    satisfied = check_kkt_conditions.check_kkt_conditions(x_train, y_train, beta_hat, 1)
     print(satisfied)
     return model, x_train, y_train
 
-def check_kkt_conditions(x, y, beta_hat, lam):
-    """
-    x : m*n
-    y : m*1
-    beta_hat : n * 1
-    """
-    # m * 1
-    residual = y - x @ beta_hat
 
-    # n * 1
-    xTy = x.T @ residual
-    results = []
-    for j in range(x.shape[1]):
-        if beta_hat[j] != 0:
-            expected = lam * np.sign(beta_hat[j])
-            if not np.isclose(xTy[j], expected, atol = 1e-4):
-                results.append(True)
-            else:
-                results.append(False)
-        else:
-            if np.abs(xTy[j]) > lam + 1e-6:
-                results.append(True)
-            else:
-                results.append(False)
-    return results
 
 if __name__ == "__main__":
     main_model()
