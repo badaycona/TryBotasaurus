@@ -26,7 +26,7 @@ def coordinate_descent_lasso(X, y, lam, num_iter = MAX_ITERATE):
             beta[j] = soft_thresholding(rho_j, lam, z) 
 
             residual = r_j - X[:, j] * beta[j]
-    sigma = np.sum(np.mean(X, axis = 0) * beta)
+    sigma = np.sum(np.mean(X, axis = 0)) * beta
     intercept = np.mean(y) - sigma
     return beta, intercept
 def main_model():
@@ -62,9 +62,9 @@ def main_model():
 
     satisfied = check_kkt_conditions.check_kkt_conditions(x_train, y_train, beta_hat, 1)
     print(satisfied)
+    print(x_train.shape, y_train.shape)
     return model, x_train, y_train
 
 
-
-if __name__ == "__main__":
+if __name__ == "__main__": 
     main_model()
