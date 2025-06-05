@@ -32,7 +32,7 @@ def coordinate_descent_lasso(X, y, lam, num_iter = MAX_ITERATE):
 def main_model():
     np.random.seed(0)
 
-    x, y = make_regression(n_samples = 1000, n_features = 20, n_informative = 5, noise = 0.1, random_state = 0)
+    x, y = make_regression(n_samples = 1000, n_features = 20, n_informative = 5, noise = 1, random_state = 0)
 
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 0.2, random_state = 0)
 
