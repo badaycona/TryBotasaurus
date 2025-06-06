@@ -26,7 +26,7 @@ def coordinate_descent_lasso(X, y, lam, num_iter = MAX_ITERATE):
             beta[j] = soft_thresholding(rho_j, lam, z) 
 
             residual = r_j - X[:, j] * beta[j]
-    sigma = np.sum(np.mean(X, axis = 0)) * beta
+    sigma = np.sum(np.mean(X, axis = 0) * beta) 
     intercept = np.mean(y) - sigma
     return beta, intercept
 def main_model():
