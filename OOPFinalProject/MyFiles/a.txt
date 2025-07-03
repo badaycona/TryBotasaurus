@@ -1,0 +1,16 @@
+---tìm dữ liệu thuộc tính riêng của 5 thành phần chính sau để kiểm tra tương thích khi build PC: mỗi cái chia 1 file csv, json gì cũng được:
+
+1. CPU: model_name, brand(intel/amd), socket, tdp, -> bắt buộc, cần có để so sánh logic 
+2. Mainboard: tên, socket, ram_type, pcie_vesion 
+3.ram: type, capacity
+4. gpu: model, tdp, pcie_version, ( để kiểm tra tương thích game thì thêm hỗ trợ bao nhiêu vram
+5. psu: wattage
+các thuộc tính trên là những cái bắt buộc phải có ở phần kiểm tra tương thích PC, có thể bổ sung thêm nếu có
+Logic kiểm tra tương thích cơ bản:
+cpu.socket === mainboard.socket
+ram.type === mainboard.ram_type
+gpu.pcie_version <= mainboard.pcie_version
+psu.wattage >= cpu.tdp + gpu.tdp + 100
+
+-- Tương thích game và PC:
+lấy dữ liệu của can you run it cho một vài game là ok

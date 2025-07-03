@@ -1,0 +1,13 @@
+hiện là có mấy cái thắc mắc đây tui hỏi ae chút:
+GUI dùng KivyMD thì có rồi, nma phần dữ liệu của từng cái CPU, GPU, .. Hoặc mình crawl data về lưu file json (dùng API lấy mức giá của nó nếu cần), 
+phần kiểm tra tương thích thì dùng API kiểm tra xem nó có tương thích hay ko (mất điểm nma nhanh hơn) - hay là mình tìm data yêu cầu
+của từng thiết bị phần cứng để kiểm tương thích ( data có ko?), còn phần Game thì tìm dữ liệu yêu cầu phần cứng hay là truyền API vào, rồi 
+so sánh theo logic nào để cho thấy game có chạy được trên PC hay không ví dụ nó yêu cầu RTX 3050 nhưng mình có GTX1660 thì so sánh sao ? truyền API được ko.
+- Ý của t là như này: + Tự tìm data CPU, GPU, ..
+		      + Giá có thể dùng API, nếu không được thì bỏ 
+			+ Kiểm tra tương thích phần cứng: ưu tiên tìm dữ liệu dùng logic so sánh , nếu không có -> truyền API vào
+
+			+ Game thì t nghĩ truyền API vào để lấy cấu hình yêu cầu vì Game nó có cập nhật
+			+ So sánh cấu hình Game với PC đã build thì qui về 1 thang nữa là thang Tier ( tìm data rồi sài logic, không có data thì truyền API)
+  Tks đã xem :))
+
