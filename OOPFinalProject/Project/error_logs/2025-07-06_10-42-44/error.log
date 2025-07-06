@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "C:\Users\Admin\Downloads\Code\OOPFinalProject\Project\.venv\Lib\site-packages\botasaurus\browser_decorator.py", line 201, in run_task
+    result = func(driver, data)
+  File "c:\Users\Admin\Downloads\Code\OOPFinalProject\Project\utils\cloudflare_bypass.py", line 8, in _fetch
+    return driver.get_page_source()
+           ^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Driver' object has no attribute 'get_page_source'

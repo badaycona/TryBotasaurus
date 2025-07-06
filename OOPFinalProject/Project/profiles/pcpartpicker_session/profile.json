@@ -1,0 +1,22 @@
+[
+    {
+        "name": "cf_chl_rc_i",
+        "value": "3",
+        "domain": "pcpartpicker.com",
+        "path": "/",
+        "expires": 1751778155,
+        "size": 12,
+        "httpOnly": false,
+        "secure": true,
+        "session": false,
+        "sameSite": "None",
+        "priority": "Medium",
+        "sameParty": false,
+        "sourceScheme": "Secure",
+        "sourcePort": 443,
+        "partitionKey": {
+            "topLevelSite": "https://pcpartpicker.com",
+            "hasCrossSiteAncestor": false
+        }
+    }
+]

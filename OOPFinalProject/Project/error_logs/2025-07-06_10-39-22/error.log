@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "C:\Users\Admin\Downloads\Code\OOPFinalProject\Project\.venv\Lib\site-packages\botasaurus\browser_decorator.py", line 201, in run_task
+    result = func(driver, data)
+  File "c:\Users\Admin\Downloads\Code\OOPFinalProject\Project\utils\cloudflare_bypass.py", line 7, in fetch_with_botasaurus
+    return driver.html()
+           ^^^^^^^^^^^
+AttributeError: 'Driver' object has no attribute 'html'
