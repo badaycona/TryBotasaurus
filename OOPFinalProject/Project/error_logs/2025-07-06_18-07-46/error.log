@@ -1,6 +1,0 @@
-Traceback (most recent call last):
-  File "C:\Users\Admin\Downloads\Code\OOPFinalProject\Project\.venv\Lib\site-packages\botasaurus\browser_decorator.py", line 201, in run_task
-    result = func(driver, data)
-  File "c:\Users\Admin\Downloads\Code\OOPFinalProject\Project\MyTest\try_surfing.py", line 51, in download_all_html_pages
-    next_page_button = driver.get_element_with_exact_text(str(next_page_number), tag='a')
-TypeError: BrowserTab.get_element_with_exact_text() got an unexpected keyword argument 'tag'
