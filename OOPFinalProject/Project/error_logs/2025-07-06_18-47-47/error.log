@@ -1,0 +1,55 @@
+Traceback (most recent call last):
+  File "C:\Users\Admin\Downloads\Code\OOPFinalProject\Project\.venv\Lib\site-packages\botasaurus\browser_decorator.py", line 201, in run_task
+    result = func(driver, data)
+  File "c:\Users\Admin\Downloads\Code\OOPFinalProject\Project\MyTest\try_surfing.py", line 24, in download_html_pages
+    driver.google_get(link, bypass_cloudflare=True)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Admin\Downloads\Code\OOPFinalProject\Project\.venv\Lib\site-packages\botasaurus_driver\driver.py", line 2230, in google_get
+    self.get_via(
+    ~~~~~~~~~~~~^
+        link,
+        ^^^^^
+    ...<4 lines>...
+        timeout=timeout,
+        ^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Admin\Downloads\Code\OOPFinalProject\Project\.venv\Lib\site-packages\botasaurus_driver\driver.py", line 2204, in get_via
+    self.detect_and_bypass_cloudflare()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Admin\Downloads\Code\OOPFinalProject\Project\.venv\Lib\site-packages\botasaurus_driver\driver.py", line 1397, in detect_and_bypass_cloudflare
+    bypass_if_detected(self)
+    ~~~~~~~~~~~~~~~~~~^^^^^^
+  File "C:\Users\Admin\Downloads\Code\OOPFinalProject\Project\.venv\Lib\site-packages\botasaurus_driver\solve_cloudflare_captcha.py", line 270, in bypass_if_detected
+    opponent = driver.get_bot_detected_by()
+  File "C:\Users\Admin\Downloads\Code\OOPFinalProject\Project\.venv\Lib\site-packages\botasaurus_driver\driver.py", line 1358, in get_bot_detected_by
+    if self.select('[name="cf-turnstile-response"]:not(#cf-invisible-turnstile [name="cf-turnstile-response"])', None):
+       ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Admin\Downloads\Code\OOPFinalProject\Project\.venv\Lib\site-packages\botasaurus_driver\driver.py", line 860, in select
+    elem = self._tab.select(selector, timeout=wait)
+  File "C:\Users\Admin\Downloads\Code\OOPFinalProject\Project\.venv\Lib\site-packages\botasaurus_driver\core\tab.py", line 440, in select
+        return util.wait_for_result(
+               ~~~~~~~~~~~~~~~~~~~~^
+        self.query_selector,
+        ^^^^^^^^^^^^^^^^^^^^
+    ...<2 lines>...
+        _node
+        ^^^^^
+    )
+    ^
+  File "C:\Users\Admin\Downloads\Code\OOPFinalProject\Project\.venv\Lib\site-packages\botasaurus_driver\core\util.py", line 282, in wait_for_result
+    result = find_func(*args, **kwargs)
+  File "C:\Users\Admin\Downloads\Code\OOPFinalProject\Project\.venv\Lib\site-packages\botasaurus_driver\core\tab.py", line 758, in query_selector
+    node_id = self.send(cdp.dom.query_selector(doc.node_id, selector))
+  File "C:\Users\Admin\Downloads\Code\OOPFinalProject\Project\.venv\Lib\site-packages\botasaurus_driver\core\connection.py", line 286, in send
+    self.open()
+    ~~~~~~~~~^^
+  File "C:\Users\Admin\Downloads\Code\OOPFinalProject\Project\.venv\Lib\site-packages\botasaurus_driver\core\connection.py", line 167, in open
+    self.wait_for_socket_connection()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Admin\Downloads\Code\OOPFinalProject\Project\.venv\Lib\site-packages\botasaurus_driver\core\connection.py", line 190, in wait_for_socket_connection
+    self.raise_connection_failure_exception()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Admin\Downloads\Code\OOPFinalProject\Project\.venv\Lib\site-packages\botasaurus_driver\core\connection.py", line 182, in raise_connection_failure_exception
+    raise Exception(self._connection_failure_message)
+Exception: [WinError 10053] An established connection was aborted by the software in your host machine

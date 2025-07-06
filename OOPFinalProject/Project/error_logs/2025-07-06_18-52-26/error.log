@@ -1,0 +1,76 @@
+Traceback (most recent call last):
+  File "C:\Users\Admin\Downloads\Code\OOPFinalProject\Project\.venv\Lib\site-packages\botasaurus_driver\core\connection.py", line 64, in wait_till_response_arrives
+    message = q.get(timeout=timeout)
+  File "D:\Lib\queue.py", line 212, in get
+    raise Empty
+_queue.Empty
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Admin\Downloads\Code\OOPFinalProject\Project\.venv\Lib\site-packages\botasaurus_driver\driver.py", line 251, in get_shadow_root
+    elem = self._tab.get_element_at_point(x, y, wait)
+  File "C:\Users\Admin\Downloads\Code\OOPFinalProject\Project\.venv\Lib\site-packages\botasaurus_driver\core\tab.py", line 494, in get_element_at_point
+        return util.wait_for_result(
+               ~~~~~~~~~~~~~~~~~~~~^
+        self.perform_get_element_at_point,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<2 lines>...
+        y
+        ^
+    )
+    ^
+  File "C:\Users\Admin\Downloads\Code\OOPFinalProject\Project\.venv\Lib\site-packages\botasaurus_driver\core\util.py", line 282, in wait_for_result
+    result = find_func(*args, **kwargs)
+  File "C:\Users\Admin\Downloads\Code\OOPFinalProject\Project\.venv\Lib\site-packages\botasaurus_driver\core\tab.py", line 471, in perform_get_element_at_point
+    doc: cdp.dom.Node = self.send(cdp.dom.get_document(-1, True))
+                        ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Admin\Downloads\Code\OOPFinalProject\Project\.venv\Lib\site-packages\botasaurus_driver\core\connection.py", line 290, in send
+    return self.perform_send(cdp_obj, _is_update, wait_for_response)
+           ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Admin\Downloads\Code\OOPFinalProject\Project\.venv\Lib\site-packages\botasaurus_driver\core\connection.py", line 310, in perform_send
+    result = wait_till_response_arrives(self.queue, tx_id , MAX_WAIT)
+  File "C:\Users\Admin\Downloads\Code\OOPFinalProject\Project\.venv\Lib\site-packages\botasaurus_driver\core\connection.py", line 68, in wait_till_response_arrives
+    raise TimeoutError("Response not received")
+TimeoutError: Response not received
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Admin\Downloads\Code\OOPFinalProject\Project\.venv\Lib\site-packages\botasaurus\browser_decorator.py", line 201, in run_task
+    result = func(driver, data)
+  File "c:\Users\Admin\Downloads\Code\OOPFinalProject\Project\MyTest\try_surfing.py", line 24, in download_html_pages
+    print(f"Bắt đầu tải HTML từ trang: ", link)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Admin\Downloads\Code\OOPFinalProject\Project\.venv\Lib\site-packages\botasaurus_driver\driver.py", line 2230, in google_get
+    self.get_via(
+    ~~~~~~~~~~~~^
+        link,
+        ^^^^^
+    ...<4 lines>...
+        timeout=timeout,
+        ^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Admin\Downloads\Code\OOPFinalProject\Project\.venv\Lib\site-packages\botasaurus_driver\driver.py", line 2204, in get_via
+    self.detect_and_bypass_cloudflare()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Admin\Downloads\Code\OOPFinalProject\Project\.venv\Lib\site-packages\botasaurus_driver\driver.py", line 1397, in detect_and_bypass_cloudflare
+    bypass_if_detected(self)
+    ~~~~~~~~~~~~~~~~~~^^^^^^
+  File "C:\Users\Admin\Downloads\Code\OOPFinalProject\Project\.venv\Lib\site-packages\botasaurus_driver\solve_cloudflare_captcha.py", line 273, in bypass_if_detected
+    solve_full_cf(driver)
+    ~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Users\Admin\Downloads\Code\OOPFinalProject\Project\.venv\Lib\site-packages\botasaurus_driver\solve_cloudflare_captcha.py", line 151, in solve_full_cf
+    iframe = get_iframe_content(driver)
+  File "C:\Users\Admin\Downloads\Code\OOPFinalProject\Project\.venv\Lib\site-packages\botasaurus_driver\solve_cloudflare_captcha.py", line 64, in get_iframe_content
+    content_el = iframe_tab.get_shadow_root()
+  File "C:\Users\Admin\Downloads\Code\OOPFinalProject\Project\.venv\Lib\site-packages\botasaurus_driver\driver.py", line 1523, in get_shadow_root
+    return self.select('body').get_shadow_root(wait)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "C:\Users\Admin\Downloads\Code\OOPFinalProject\Project\.venv\Lib\site-packages\botasaurus_driver\driver.py", line 254, in get_shadow_root
+    return self._make_element(self._elem.first_shadow_root)
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Admin\Downloads\Code\OOPFinalProject\Project\.venv\Lib\site-packages\botasaurus_driver\core\element.py", line 229, in first_shadow_root
+    raise ShadowRootClosedException()
+botasaurus_driver.exceptions.ShadowRootClosedException: Unable to access Shadow Root because it is closed.
