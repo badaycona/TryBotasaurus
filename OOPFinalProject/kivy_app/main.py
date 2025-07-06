@@ -18,6 +18,7 @@ from kivymd.uix.behaviors import HoverBehavior
 from kivymd.uix.menu import MDDropdownMenu
 from kivy.clock import Clock
 from kivy.metrics import dp
+from datas.main_flow import search_component
 import os
 import json
 import sys
@@ -32,64 +33,63 @@ import re
 class BuildCheckApp(MDApp):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        # Set base directory to the directory containing this script
         self.BASE_DIR = os.path.dirname(os.path.abspath(__file__))
         self.DATAS_DIR = os.path.join(self.BASE_DIR, 'datas')
-
-        # If datas folder is empty, try to copy from pc-part-dataset/data/json
-        self.ensure_datas_from_pc_part_dataset()
-
         self.dialog = None
         self.pc_config = None
 
-        self.cpu_data = self.load_component('cpu.json')
-        print(f"[DEBUG] Loaded {len(self.cpu_data)} CPUs. Example: {self.cpu_data[0] if self.cpu_data else 'No data'}")
-
-        self.gpu_data = self.load_component('gpu.json')
-        print(f"[DEBUG] Loaded {len(self.gpu_data)} GPUs. Example: {self.gpu_data[0] if self.gpu_data else 'No data'}")
-
-        self.ram_data = self.load_component('ram.json')
-        print(f"[DEBUG] Loaded {len(self.ram_data)} RAM modules. Example: {self.ram_data[0] if self.ram_data else 'No data'}")
-
-        self.mainboard_data = self.load_component('mainboard.json')
-        print(f"[DEBUG] Loaded {len(self.mainboard_data)} Mainboards. Example: {self.mainboard_data[0] if self.mainboard_data else 'No data'}")
-
-        self.psu_data = self.load_component('psu.json')
-        print(f"[DEBUG] Loaded {len(self.psu_data)} PSUs. Example: {self.psu_data[0] if self.psu_data else 'No data'}")
-
-        self.os_data = self.load_component('os.json')
-        print(f"[DEBUG] Loaded {len(self.os_data)} OS entries. Example: {self.os_data[0] if self.os_data else 'No data'}")
-
-        self.data = {
-            'cpu': {'data': self.cpu_data, 'class': CPU, 'menu': None},
-            'gpu': {'data': self.gpu_data, 'class': GPU, 'menu': None},
-            'ram': {'data': self.ram_data, 'class': RAM, 'menu': None},
-            'mainboard': {'data': self.mainboard_data, 'class': Mainboard, 'menu': None},
-            'psu': {'data': self.psu_data, 'class': PSU, 'menu': None},
-            'os': {'data': self.os_data, 'class': OS, 'menu': None}
+        # Define all hardware types and their filenames
+        self.component_files = {
+            'cpu':      ('cpu.json',      CPU),
+            'gpu':      ('gpu.json',      GPU),
+            'ram':      ('ram.json',      RAM),
+            'mainboard':('mainboard.json',Mainboard),
+            'psu':      ('psu.json',      PSU),
+            'os':       ('os.json',       OS)
         }
+
+        self.data = {}
+        for key, (filename, cls) in self.component_files.items():
+            loaded = self.load_component(filename)
+            print(f"[DEBUG] Loaded {len(loaded)} {key.upper()}s. Example: {loaded[0] if loaded else 'No data'}")
+            self.data[key] = {'data': loaded, 'class': cls, 'menu': None}
+
+        # For backward compatibility with old attribute names
+        self.cpu_data = self.data['cpu']['data']
+        self.gpu_data = self.data['gpu']['data']
+        self.ram_data = self.data['ram']['data']
+        self.mainboard_data = self.data['mainboard']['data']
+        self.psu_data = self.data['psu']['data']
+        self.os_data = self.data['os']['data']
+
+        # Load games cache
         self.game_data = self.load_component('steam_games_cache.json')
         print(f"Loaded {len(self.game_data)} games from cache.")
         self.game_menu = None
         self.search_trigger = None
         self.selected_game = None
+    def show_component_specs(self, component_type, component_name):
+        result = search_component(component_type, component_name)
+        if "error" in result:
+            self.show_error_dialog(result["error"])
+        else:
+            # Display result in your UI, e.g., in a dialog or label
+            self.show_info_dialog(json.dumps(result, indent=2, ensure_ascii=False))
 
-    def ensure_datas_from_pc_part_dataset(self):
-        """Copy JSON files from pc-part-dataset/data/json to datas if datas is empty."""
-        datas_files = os.listdir(self.DATAS_DIR) if os.path.exists(self.DATAS_DIR) else []
-        if not datas_files:
-            src_json_dir = os.path.join(self.BASE_DIR, '..', 'pc-part-dataset', 'data', 'json')
-            if os.path.exists(src_json_dir):
-                os.makedirs(self.DATAS_DIR, exist_ok=True)
-                for fname in os.listdir(src_json_dir):
-                    src = os.path.join(src_json_dir, fname)
-                    dst = os.path.join(self.DATAS_DIR, fname)
-                    try:
-                        if os.path.isfile(src):
-                            with open(src, 'rb') as fsrc, open(dst, 'wb') as fdst:
-                                fdst.write(fsrc.read())
-                    except Exception as e:
-                        print(f"Error copying {fname}: {e}", file=sys.stderr)
+    def show_info_dialog(self, message):
+        if self.dialog:
+            self.dialog.dismiss()
+        self.dialog = MDDialog(
+            title="Thông tin linh kiện",
+            text=message,
+            buttons=[
+                MDFlatButton(
+                    text="OK", text_color=self.theme_cls.primary_color,
+                    on_release=lambda x: self.dialog.dismiss()
+                )
+            ],
+        )
+        self.dialog.open()
 
     def load_component(self, filename):
         """Load a JSON component file from datas folder, fallback to pc-part-dataset if missing.
@@ -217,20 +217,20 @@ class BuildCheckApp(MDApp):
     def show_component_suggestions(self, component_type, text_field):
         search_text = text_field.text.strip().lower()
         search_keywords = search_text.split()
-        print(f"Loaded {len(self.data[component_type]['data'])} items for {component_type}")  # Debug
-        filtered_components = [
-            self.data[component_type]['class'](**item)
+        # Use the loaded data for suggestions (just names)
+        filtered_names = [
+            item['name']
             for item in self.data[component_type]['data']
             if all(keyword in item['name'].lower() for keyword in search_keywords)
         ]
 
         menu_items = [
             {
-                "text": component.name,
+                "text": name,
                 "viewclass": "OneLineListItem",
                 "height": dp(48),
-                "on_release": lambda x=component: self.select_component(text_field, component=x, component_type=component_type)
-            } for component in filtered_components
+                "on_release": lambda x=name: self.select_component_by_name(text_field, x, component_type)
+            } for name in filtered_names
         ]
 
         if self.data[component_type]['menu']:
@@ -246,58 +246,58 @@ class BuildCheckApp(MDApp):
         if menu_items:
             self.data[component_type]['menu'].open()
 
-
-    def select_component(self, text_field, component, component_type):
+    def select_component_by_name(self, text_field, component_name, component_type):
+        # Fetch full specs using the new search_component logic
+        specs = search_component(component_type, component_name)
+        if "error" in specs:
+            self.show_error_dialog(specs["error"])
+            return
 
         screen = self.root.ids.screen_manager.get_screen('pc_input')
-        if component_type == 'cpu':
-            screen.ids.cpu_model.text = component.name
-            screen.ids.cpu_cores.text = str(component.core_count)
-            screen.ids.cpu_socket.text = component.socket
-            screen.ids.cpu_tdp.text = component.tdp
-            screen.ids.cpu_coreclock.text = str(component.core_clock)
-            screen.ids.cpu_boost.text = str(component.boost_clock)
-            
-        elif component_type == 'gpu': 
-            
-            screen.ids.gpu_model.text=component.name
-            screen.ids.gpu_vram.text=str(component.vram)
-            screen.ids.gpu_boostclock.text=str(component.boost_clock)
-            screen.ids.gpu_tdp.text=str(component.tdp)
-            screen.ids.gpu_chipset.text=str(component.chipset)
-            screen.ids.gpu_coreclock.text=str(component.core_clock)
-            screen.ids.gpu_length.text=str(component.length)
-            screen.ids.gpu_color.text=str(component.color)
-            
-        elif component_type == 'ram':
-            screen.ids.ram_model.text=component.name
-            screen.ids.ram_capa.text=str(component.capacity)
-            screen.ids.speed_ram.text=str(component.speed)
-            screen.ids.ram_type.text=str(component.ram_type)
-            screen.ids.ram_color.text=str(component.color)
-            
-            
-        elif component_type == 'mainboard':
-            screen.ids.mainboard_model.text=component.name
-            screen.ids.mainboard_socket.text=component.socket
-            screen.ids.mainboard_form.text=component.form_factor
-            screen.ids.mainboard_chipset.text=component.chipset
-            screen.ids.mainboard_ramtype.text=component.ram_type 
-            screen.ids.pcie.text=component.pcie_version
-            screen.ids.mainboard_max.text=component.max_memory
-            screen.ids.slots.text=component.memory_slots
-            screen.ids.mainboard_color.text=component.color
-            
 
+        if component_type == 'cpu':
+            screen.ids.cpu_model.text = specs.get('name', component_name)
+            screen.ids.cpu_cores.text = str(specs.get('core_count', ''))
+            screen.ids.cpu_socket.text = specs.get('socket', '')
+            screen.ids.cpu_tdp.text = str(specs.get('tdp', ''))
+            screen.ids.cpu_coreclock.text = str(specs.get('core_clock', ''))
+            screen.ids.cpu_boost.text = str(specs.get('boost_clock', ''))
+        elif component_type == 'gpu':
+            screen.ids.gpu_model.text = specs.get('name', component_name)
+            screen.ids.gpu_vram.text = str(specs.get('vram', ''))
+            screen.ids.gpu_boostclock.text = str(specs.get('boost_clock', ''))
+            screen.ids.gpu_tdp.text = str(specs.get('tdp', ''))
+            screen.ids.gpu_chipset.text = specs.get('chipset', '')
+            screen.ids.gpu_coreclock.text = str(specs.get('core_clock', ''))
+            screen.ids.gpu_length.text = str(specs.get('length', ''))
+            screen.ids.gpu_color.text = specs.get('color', '')
+        elif component_type == 'ram':
+            screen.ids.ram_model.text = specs.get('name', component_name)
+            screen.ids.ram_capa.text = str(specs.get('capacity', ''))
+            screen.ids.speed_ram.text = str(specs.get('speed', ''))
+            screen.ids.ram_type.text = specs.get('type', '')
+            screen.ids.ram_color.text = specs.get('color', '')
+        elif component_type == 'mainboard':
+            screen.ids.mainboard_model.text = specs.get('name', component_name)
+            screen.ids.mainboard_socket.text = specs.get('socket', '')
+            screen.ids.mainboard_form.text = specs.get('form_factor', '')
+            screen.ids.mainboard_chipset.text = specs.get('chipset', '')
+            screen.ids.mainboard_ramtype.text = specs.get('ram_type', '')
+            screen.ids.pcie.text = specs.get('pcie_version', '')
+            screen.ids.mainboard_max.text = str(specs.get('max_memory', ''))
+            screen.ids.slots.text = str(specs.get('memory_slots', ''))
+            screen.ids.mainboard_color.text = specs.get('color', '')
         elif component_type == 'psu':
-            screen.ids.psu_model.text=component.name
-            screen.ids.psu_wattage.text=str(component.wattage)
-        
+            screen.ids.psu_model.text = specs.get('name', component_name)
+            screen.ids.psu_wattage.text = str(specs.get('wattage', ''))
         elif component_type == 'os':
-            screen.ids.os.text=component.name
+            screen.ids.os.text = specs.get('name', component_name)
 
         if self.data[component_type]['menu']:
             self.data[component_type]['menu'].dismiss()
+
+        # Optionally show a dialog with all specs
+        self.show_component_specs(component_type, component_name)
       
     def validate_required_fields(self):
         screen = self.root.ids.screen_manager.get_screen('pc_input')
