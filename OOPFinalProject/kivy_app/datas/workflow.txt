@@ -1,0 +1,15 @@
+kivy_app\datas\fetch_raw_url\try_surfing.py => Take all pages => Download to kivy_app\datas\fetch_raw_url\html_pages
+
+kivy_app\datas\fetch_raw_url\parse_html.py take data from kivy_app\datas\fetch_raw_url\html_pages to make kivy_app\datas\fetch_raw_url\component_data
+
+when app search a component, raise request to kivy_app\datas\request_handler.py 
+
+kivy_app\datas\request_handler.py find the corresponding url from kivy_app\datas\fetch_raw_url\component_data 
+
+Then announce kivy_app\datas\web_scrape.py to take HTML data and write out kivy_app\datas\temp_content.html
+
+HTML data then transmitted to kivy_app\datas\product_parser.py to refine and take specification of a component
+
+then return to app
+
+=> Create a main_flow.py
